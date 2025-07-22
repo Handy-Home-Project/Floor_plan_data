@@ -161,21 +161,6 @@ def process_image(image,rslt_folder_path,img_fnm):
     second_boundary_dict = defaultdict(list)
 
     ## pixel value --> region 
-    
-    rdict = { 192:"다목적공간",
-              32 :"엘리베이터홀",
-            48:"계단실",
-            64:"living_room",
-            80:"bed_room",
-            96 :"kitchen",
-            112 :"entrance",
-            128  :"valcony",
-            144 :"bath_room",
-            208   :"실외기실",
-            176  :"dress_room",
-            192   :"기타",
-            208   :"엘리베이터"}
-
     for pixel_value in unique_pixel_values:
         if pixel_value == 0:
             continue
@@ -197,17 +182,43 @@ def process_image(image,rslt_folder_path,img_fnm):
                     cv2.circle(output_image, (x, y), 5, (255, 0, 0), -1)
 
                 cv2.polylines(output_image, [approx], True, (0, 0, 255), 2)
-                #second_boundary_dict[f'region_{pixel_value}_{region_id}']=[point[0].tolist() for point in approx]
-                second_boundary_dict[f'{rdict[pixel_value]}_{region_id}']=[point[0].tolist() for point in approx]
+                second_boundary_dict[f'{pixel_value}_{region_id}']=[point[0].tolist() for point in approx]
+                #second_boundary_dict[f'{rdict[pixel_value]}_{region_id}']=[point[0].tolist() for point in approx]
 
                 
             #cv2.imwrite(f"{rslt_folder_path}/{img_fnm}second_region_pixel_{pixel_value}_region_{region_id}.png", output_image)
 
-    formatted_list = []
-    
+
+    formatted_list = [] 
+
+    data_dict = {
+        "LIVING_ROOM": [64],
+        "KITCHEN": [96],
+        "BATH_ROOM": [144],
+        "VALCONY": [128],
+        "ROOM": [80, 176],
+        "OTHER": [112, 192, 32, 48, 208]
+    }   
+
+    data_index = defaultdict(int)   
+
     for key, value in second_boundary_dict.items():
+        parts = key.split('_')
+        matched = False 
+
+        for d_key, d_values in data_dict.items():
+            if int(parts[0]) in d_values:
+                data_index[d_key] += 1
+                format_key = f"{d_key}_{data_index[d_key]}"
+                matched = True
+                break   
+
+        if not matched:
+            data_index["OTHER"] += 1
+            format_key = f"OTHER_{data_index['OTHER']}" 
+
         formatted_list.append({
-            "name": key,
+            "name": format_key,
             "vertex": value
         })
 
@@ -303,7 +314,7 @@ if __name__ == "__main__":
     #parser.add_argument('--fp-model-path', '-fmp', default='./model/SPA_FP_best_model.pth', help='FP 모델 경로를 입력해주세요. 예) ./model/SPA_FP_best_model.pth')
     #parser.add_argument('--cs-model-path', '-cmp', default='./model/SPA_CS_best_model.pth', help='CS 모델 경로를 입력해주세요. 예) ./model/SPA_CS_best_model.pth')
     parser.add_argument('--fp-model-path', '-fmp', default='/c/Users/USER/handy_home/model_custom/model_pram/SPA/SPA_FP_test_model.pth', help='FP 모델 경로를 입력해주세요. 예) ./model/SPA_FP_best_model.pth')
-    parser.add_argument('--test_data_path', '-dt', default='/c/Users/USER/handy_home/model_custom/floor_plan/data/image_FP_test.png', help='예측할 데이터의 경로를 입력해주세요. 예) ./model/SPA_CS_best_model.pth')
+    parser.add_argument('--test_data_path', '-dt', default='/c/Users/USER/handy_home/model_custom/floor_plan/data/image_FP_test2.png', help='예측할 데이터의 경로를 입력해주세요. 예) ./model/SPA_CS_best_model.pth')
     parser.add_argument('--result_image_path', '-rt', default='./rslt', help='예측한 결과의 이미지를 저장할 폴더의 경로를 입력해주세요. 예) ./model/SPA_CS_best_model.pth')
     
     args = parser.parse_args()

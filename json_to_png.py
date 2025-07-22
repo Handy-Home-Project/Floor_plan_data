@@ -116,7 +116,7 @@ origin_dir = '/c/Users/USER/handy_home/model_custom/floor_plan_1/test_origin/'
 label_dir = '/c/Users/USER/handy_home/dataset/type/labels/'
 
 
-for file in os.listdir(dir)[20:30]:
+for file in os.listdir(dir)[40:50]:
     cmd = f'cp {dir}{file} {origin_dir}'
     os.system(cmd)
     cmd = f'python spa_prediction_3.py -rt test -dt {dir}{file}'
